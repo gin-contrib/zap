@@ -41,9 +41,9 @@ func Ginzap(logger zap.Logger, timeFormat string, utc bool) gin.HandlerFunc {
 				zap.String("method", c.Request.Method),
 				zap.String("path", path),
 				zap.String("ip", c.ClientIP()),
-				zap.Duration("latency", latency),
 				zap.String("user-agent", c.Request.UserAgent()),
 				zap.String("time", end.Format(timeFormat)),
+				zap.Duration("latency", latency),
 			)
 		}
 	}
