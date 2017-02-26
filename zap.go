@@ -5,7 +5,7 @@ package ginzap
 import (
 	"time"
 
-	"github.com/uber-go/zap"
+	"go.uber.org/zap"
 	"gopkg.in/gin-gonic/gin.v1"
 )
 
@@ -17,7 +17,7 @@ import (
 // It receives:
 //   1. A time package format string (e.g. time.RFC3339).
 //   2. A boolean stating whether to use UTC time zone or local.
-func Ginzap(logger zap.Logger, timeFormat string, utc bool) gin.HandlerFunc {
+func Ginzap(logger *zap.Logger, timeFormat string, utc bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
 		// some evil middlewares modify this values
