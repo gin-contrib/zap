@@ -17,23 +17,20 @@ import (
 	"time"
 
 	"github.com/gin-contrib/zap"
-	"github.com/uber-go/zap"
+	"go.uber.org/zap"
 	"gopkg.in/gin-gonic/gin.v1"
 )
 
 func main() {
 	r := gin.New()
 
-	log := zap.New(
-		zap.NewTextEncoder(),
-		zap.DebugLevel,
-	)
+	logger, _ := zap.NewProduction()
 
 	// Add a ginzap middleware, which:
 	//   - Logs all requests, like a combined access and error log.
 	//   - Logs to stdout.
 	//   - RFC3339 with UTC time format.
-	r.Use(ginzap.Ginzap(log, time.RFC3339, true))
+	r.Use(ginzap.Ginzap(logger, time.RFC3339, true))
 
 	// Example ping request.
 	r.GET("/ping", func(c *gin.Context) {
