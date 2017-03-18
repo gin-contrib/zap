@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/gin-contrib/zap"
+	"github.com/gin-gonic/gin"
 	"github.com/uber-go/zap"
-	"gopkg.in/gin-gonic/gin.v1"
 )
 
 func main() {

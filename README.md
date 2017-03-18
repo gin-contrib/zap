@@ -18,7 +18,7 @@ import (
 
 	"github.com/gin-contrib/zap"
 	"github.com/uber-go/zap"
-	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
