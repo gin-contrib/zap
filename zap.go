@@ -5,8 +5,8 @@ package ginzap
 import (
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/uber-go/zap"
-	"gopkg.in/gin-gonic/gin.v1"
 )
 
 // Ginzap returns a gin.HandlerFunc (middleware) that logs requests using uber-go/zap.
