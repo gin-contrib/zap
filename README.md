@@ -10,6 +10,7 @@ Alternative logging through [zap](https://github.com/uber-go/zap). Thanks for [P
 
 See the [example](example/main.go).
 
+[embedmd]:# (example/main.go go)
 ```go
 package main
 
@@ -18,23 +19,20 @@ import (
 	"time"
 
 	"github.com/gin-contrib/zap"
-	"github.com/uber-go/zap"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 func main() {
 	r := gin.New()
 
-	log := zap.New(
-		zap.NewTextEncoder(),
-		zap.DebugLevel,
-	)
+	logger, _ := zap.NewProduction()
 
 	// Add a ginzap middleware, which:
 	//   - Logs all requests, like a combined access and error log.
 	//   - Logs to stdout.
 	//   - RFC3339 with UTC time format.
-	r.Use(ginzap.Ginzap(log, time.RFC3339, true))
+	r.Use(ginzap.Ginzap(logger, time.RFC3339, true))
 
 	// Example ping request.
 	r.GET("/ping", func(c *gin.Context) {
@@ -44,5 +42,4 @@ func main() {
 	// Listen and Server in 0.0.0.0:8080
 	r.Run(":8080")
 }
-
 ```
