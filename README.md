@@ -6,6 +6,22 @@
 
 Alternative logging through [zap](https://github.com/uber-go/zap). Thanks for [Pull Request](https://github.com/gin-gonic/contrib/pull/129) from [@yezooz](https://github.com/yezooz)
 
+## Usage
+
+### Start using it
+
+Download and install it:
+
+```sh
+$ go get github.com/gin-contrib/zap
+```
+
+Import it in your code:
+
+```go
+import "github.com/gin-contrib/zap"
+```
+
 ## Example
 
 See the [example](example/main.go).
