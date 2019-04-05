@@ -50,9 +50,18 @@ func main() {
 	//   - RFC3339 with UTC time format.
 	r.Use(ginzap.Ginzap(logger, time.RFC3339, true))
 
+	// Logs all panic to error log
+	//   - stack means whether output the stack info.
+	r.Use(ginzap.RecoveryWithZap(logger, true))
+
 	// Example ping request.
 	r.GET("/ping", func(c *gin.Context) {
 		c.String(200, "pong "+fmt.Sprint(time.Now().Unix()))
+	})
+
+	// Example when panic happen.
+	r.GET("/panic", func(c *gin.Context) {
+		panic("An unexpected error happen!")
 	})
 
 	// Listen and Server in 0.0.0.0:8080
