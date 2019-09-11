@@ -80,7 +80,7 @@ func RecoveryWithZap(logger *zap.Logger, stack bool) gin.HandlerFunc {
 				httpRequest, _ := httputil.DumpRequest(c.Request, false)
 				if brokenPipe {
 					logger.Error(c.Request.URL.Path,
-						zap.String("error", err.(string)),
+						zap.Any("error", err),
 						zap.String("request", string(httpRequest)),
 					)
 					// If the connection is dead, we can't write a status to it.
@@ -92,14 +92,14 @@ func RecoveryWithZap(logger *zap.Logger, stack bool) gin.HandlerFunc {
 				if stack {
 					logger.Error("[Recovery from panic]",
 						zap.Time("time", time.Now()),
-						zap.String("error", err.(string)),
+						zap.Any("error", err),
 						zap.String("request", string(httpRequest)),
 						zap.String("stack", string(debug.Stack())),
 					)
 				} else {
 					logger.Error("[Recovery from panic]",
 						zap.Time("time", time.Now()),
-						zap.String("error", err.(string)),
+						zap.Any("error", err),
 						zap.String("request", string(httpRequest)),
 					)
 				}
