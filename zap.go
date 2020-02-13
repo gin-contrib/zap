@@ -15,6 +15,13 @@ import (
 	"go.uber.org/zap"
 )
 
+// Config is config setting for Ginzap
+type Config struct {
+	TimeFormat string
+	UTC        bool
+	SkipPaths  []string
+}
+
 // Ginzap returns a gin.HandlerFunc (middleware) that logs requests using uber-go/zap.
 //
 // Requests with errors are logged using zap.Error().
@@ -24,6 +31,16 @@ import (
 //   1. A time package format string (e.g. time.RFC3339).
 //   2. A boolean stating whether to use UTC time zone or local.
 func Ginzap(logger *zap.Logger, timeFormat string, utc bool) gin.HandlerFunc {
+	return GinzapWithConfig(logger, &Config{TimeFormat: timeFormat, UTC: utc})
+}
+
+// GinzapWithConfig returns a gin.HandlerFunc using configs
+func GinzapWithConfig(logger *zap.Logger, conf *Config) gin.HandlerFunc {
+	skipPaths := make(map[string]bool, len(conf.SkipPaths))
+	for _, path := range conf.SkipPaths {
+		skipPaths[path] = true
+	}
+
 	return func(c *gin.Context) {
 		start := time.Now()
 		// some evil middlewares modify this values
@@ -31,9 +48,13 @@ func Ginzap(logger *zap.Logger, timeFormat string, utc bool) gin.HandlerFunc {
 		query := c.Request.URL.RawQuery
 		c.Next()
 
+		if skipPaths[path] {
+			return
+		}
+
 		end := time.Now()
 		latency := end.Sub(start)
-		if utc {
+		if conf.UTC {
 			end = end.UTC()
 		}
 
@@ -50,7 +71,7 @@ func Ginzap(logger *zap.Logger, timeFormat string, utc bool) gin.HandlerFunc {
 				zap.String("query", query),
 				zap.String("ip", c.ClientIP()),
 				zap.String("user-agent", c.Request.UserAgent()),
-				zap.String("time", end.Format(timeFormat)),
+				zap.String("time", end.Format(conf.TimeFormat)),
 				zap.Duration("latency", latency),
 			)
 		}
