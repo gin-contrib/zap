@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gin-contrib/zap"
+	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -18,11 +18,28 @@ func main() {
 	//   - Logs all requests, like a combined access and error log.
 	//   - Logs to stdout.
 	//   - RFC3339 with UTC time format.
-	r.Use(ginzap.Ginzap(logger, time.RFC3339, true))
+	//   - Custom zap filed
+	r.Use(ginzap.Logger(logger, ginzap.WithTimeFormat(time.RFC3339),
+		ginzap.WithUTC(true),
+		ginzap.WithCustomFields(
+			func(c *gin.Context) zap.Field { return zap.String("custom_field1", "value1_"+c.ClientIP()) },
+			func(c *gin.Context) zap.Field { return zap.String("custom_field2", "value2_"+c.ClientIP()) },
+		),
+	))
+	// simple ginzap.Logger(logger, ginzap.WithTimeFormat(time.RFC3339), ginzap.WithUTC(true))
+	// r.Use(ginzap.Ginzap(logger, time.RFC3339, true))
 
 	// Logs all panic to error log
 	//   - stack means whether output the stack info.
-	r.Use(ginzap.RecoveryWithZap(logger, true))
+	//   - Custom zap filed
+	r.Use(ginzap.Recovery(logger, true,
+		ginzap.WithCustomFields(
+			func(c *gin.Context) zap.Field { return zap.String("custom_field1", "value1_"+c.ClientIP()) },
+			func(c *gin.Context) zap.Field { return zap.String("custom_field2", "value2_"+c.ClientIP()) },
+		),
+	))
+	// simple ginzap.Recovery(logger, true)
+	// r.Use(ginzap.RecoveryWithZap(logger, true))
 
 	// Example ping request.
 	r.GET("/ping", func(c *gin.Context) {
