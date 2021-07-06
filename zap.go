@@ -3,6 +3,8 @@
 package ginzap
 
 import (
+	"bytes"
+	"io"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -23,12 +25,22 @@ import (
 // It receives:
 //   1. A time package format string (e.g. time.RFC3339).
 //   2. A boolean stating whether to use UTC time zone or local.
-func Ginzap(logger *zap.Logger, timeFormat string, utc bool) gin.HandlerFunc {
+func Ginzap(logger *zap.Logger, timeFormat string, utc bool, logBody bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
 		// some evil middlewares modify this values
 		path := c.Request.URL.Path
 		query := c.Request.URL.RawQuery
+
+		//copy body
+		var body []byte
+		if logBody {
+			var buf bytes.Buffer
+			tee := io.TeeReader(c.Request.Body, &buf)
+			body, _ = io.ReadAll(tee)
+			c.Request.Body = io.NopCloser(&buf)
+		}
+
 		c.Next()
 
 		end := time.Now()
@@ -48,6 +60,7 @@ func Ginzap(logger *zap.Logger, timeFormat string, utc bool) gin.HandlerFunc {
 				zap.String("method", c.Request.Method),
 				zap.String("path", path),
 				zap.String("query", query),
+				zap.String("body", string(body)),
 				zap.String("ip", c.ClientIP()),
 				zap.String("user-agent", c.Request.UserAgent()),
 				zap.String("time", end.Format(timeFormat)),
