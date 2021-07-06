@@ -48,7 +48,8 @@ func main() {
 	//   - Logs all requests, like a combined access and error log.
 	//   - Logs to stdout.
 	//   - RFC3339 with UTC time format.
-	r.Use(ginzap.Ginzap(logger, time.RFC3339, true))
+	//   - Logs body
+	r.Use(ginzap.Ginzap(logger, time.RFC3339, true, false))
 
 	// Logs all panic to error log
 	//   - stack means whether output the stack info.
