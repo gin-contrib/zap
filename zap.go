@@ -48,32 +48,30 @@ func GinzapWithConfig(logger *zap.Logger, conf *Config) gin.HandlerFunc {
 		query := c.Request.URL.RawQuery
 		c.Next()
 
-		if skipPaths[path] {
-			return
-		}
-
-		end := time.Now()
-		latency := end.Sub(start)
-		if conf.UTC {
-			end = end.UTC()
-		}
-
-		if len(c.Errors) > 0 {
-			// Append error field if this is an erroneous request.
-			for _, e := range c.Errors.Errors() {
-				logger.Error(e)
+		if _, ok := skipPaths[path]; !ok {
+			end := time.Now()
+			latency := end.Sub(start)
+			if conf.UTC {
+				end = end.UTC()
 			}
-		} else {
-			logger.Info(path,
-				zap.Int("status", c.Writer.Status()),
-				zap.String("method", c.Request.Method),
-				zap.String("path", path),
-				zap.String("query", query),
-				zap.String("ip", c.ClientIP()),
-				zap.String("user-agent", c.Request.UserAgent()),
-				zap.String("time", end.Format(conf.TimeFormat)),
-				zap.Duration("latency", latency),
-			)
+
+			if len(c.Errors) > 0 {
+				// Append error field if this is an erroneous request.
+				for _, e := range c.Errors.Errors() {
+					logger.Error(e)
+				}
+			} else {
+				logger.Info(path,
+					zap.Int("status", c.Writer.Status()),
+					zap.String("method", c.Request.Method),
+					zap.String("path", path),
+					zap.String("query", query),
+					zap.String("ip", c.ClientIP()),
+					zap.String("user-agent", c.Request.UserAgent()),
+					zap.String("time", end.Format(conf.TimeFormat)),
+					zap.Duration("latency", latency),
+				)
+			}
 		}
 	}
 }
