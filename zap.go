@@ -61,16 +61,19 @@ func GinzapWithConfig(logger *zap.Logger, conf *Config) gin.HandlerFunc {
 					logger.Error(e)
 				}
 			} else {
-				logger.Info(path,
+				fields := []zapcore.Field{
 					zap.Int("status", c.Writer.Status()),
 					zap.String("method", c.Request.Method),
 					zap.String("path", path),
 					zap.String("query", query),
 					zap.String("ip", c.ClientIP()),
 					zap.String("user-agent", c.Request.UserAgent()),
-					zap.String("time", end.Format(conf.TimeFormat)),
 					zap.Duration("latency", latency),
-				)
+				}
+				if conf.TimeFormat != "" {
+					fields = append(fields, zap.String("time", end.Format(conf.TimeFormat)))
+				}
+				logger.Info(path, fields...)
 			}
 		}
 	}
