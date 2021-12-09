@@ -62,7 +62,7 @@ func TestGinzap(t *testing.T) {
 		t.Fatalf("logged path should be /test but %s", pathStr)
 	}
 
-	err := timestampLocationCheck(logLine.Context[6].String, time.UTC)
+	err := timestampLocationCheck(logLine.Context[7].String, time.UTC)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -77,7 +77,7 @@ func TestGinzap(t *testing.T) {
 		t.Fatalf("logged path should be /test but %s", pathStr)
 	}
 
-	err = timestampLocationCheck(logLine.Context[6].String, time.Local)
+	err = timestampLocationCheck(logLine.Context[7].String, time.Local)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -123,7 +123,7 @@ func TestGinzapWithConfig(t *testing.T) {
 		t.Fatalf("logged path should be /test but %s", pathStr)
 	}
 
-	err := timestampLocationCheck(logLine.Context[6].String, time.UTC)
+	err := timestampLocationCheck(logLine.Context[7].String, time.UTC)
 	if err != nil {
 		t.Fatal(err)
 	}
