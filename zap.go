@@ -71,6 +71,9 @@ func GinzapWithConfig(logger *zap.Logger, conf *Config) gin.HandlerFunc {
 					zap.String("user-agent", c.Request.UserAgent()),
 					zap.Duration("latency", latency),
 				}
+				if requestId := c.Writer.Header().Get("X-Request-Id"); requestId != "" {
+					fields = append(fields, zap.String("request-id", requestId))
+				}
 				if conf.TimeFormat != "" {
 					fields = append(fields, zap.String("time", end.Format(conf.TimeFormat)))
 				}
