@@ -86,6 +86,16 @@ func GinzapWithConfig(logger *zap.Logger, conf *Config) gin.HandlerFunc {
 // stack means whether output the stack info.
 // The stack info is easy to find where the error occurs but the stack info is too large.
 func RecoveryWithZap(logger *zap.Logger, stack bool) gin.HandlerFunc {
+	return CustomRecoveryWithZap(logger, stack, defaultHandleRecovery)
+}
+
+// CustomRecoveryWithZap returns a gin.HandlerFunc (middleware)
+// that recovers from any panics and logs requests using uber-go/zap.
+// It will call the custom handler function to instead of return http status code 500.
+// All errors are logged using zap.Error().
+// stack means whether output the stack info.
+// The stack info is easy to find where the error occurs but the stack info is too large.
+func CustomRecoveryWithZap(logger *zap.Logger, stack bool, handler RecoveryFunc) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {
@@ -126,9 +136,16 @@ func RecoveryWithZap(logger *zap.Logger, stack bool) gin.HandlerFunc {
 						zap.String("request", string(httpRequest)),
 					)
 				}
-				c.AbortWithStatus(http.StatusInternalServerError)
+				handler(c, err)
 			}
 		}()
 		c.Next()
 	}
+}
+
+// RecoveryFunc defines the function passable to CustomRecovery.
+type RecoveryFunc func(c *gin.Context, err interface{})
+
+func defaultHandleRecovery(c *gin.Context, err interface{}) {
+	c.AbortWithStatus(http.StatusInternalServerError)
 }
