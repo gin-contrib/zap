@@ -105,6 +105,7 @@ func GinzapWithConfig(logger *zap.Logger, conf *Config) gin.HandlerFunc {
 					rdr1 = ioutil.NopCloser(bytes.NewBuffer(buf))
 					rdr2 := ioutil.NopCloser(bytes.NewBuffer(buf))
 					fields = append(fields, zap.String("body", readBody(rdr1)))
+					fmt.Println(readBody(rdr1))
 					c.Request.Body = rdr2
 				}
 				if conf.TimeFormat != "" {
