@@ -68,7 +68,10 @@ func GinzapWithConfig(logger *zap.Logger, conf *Config) gin.HandlerFunc {
 			} else {
 				var rdr1 io.ReadCloser
 				if conf.Body {
-					buf, _ := ioutil.ReadAll(c.Request.Body)
+					buf, err := ioutil.ReadAll(c.Request.Body)
+					if err != nil {
+						panic(err)
+					}
 					rdr1 = ioutil.NopCloser(bytes.NewBuffer(buf))
 					rdr2 := ioutil.NopCloser(bytes.NewBuffer(buf))
 					c.Request.Body = rdr2
@@ -94,8 +97,10 @@ func GinzapWithConfig(logger *zap.Logger, conf *Config) gin.HandlerFunc {
 
 func readBody(reader io.Reader) string {
 	buf := new(bytes.Buffer)
-	buf.ReadFrom(reader)
-
+	_, err := buf.ReadFrom(reader)
+	if err != nil {
+		panic(err)
+	}
 	s := buf.String()
 	return s
 }
