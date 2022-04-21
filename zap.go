@@ -5,6 +5,7 @@ package ginzap
 import (
 	"bytes"
 	"io"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -93,17 +94,17 @@ func GinzapWithConfig(logger *zap.Logger, conf *Config) gin.HandlerFunc {
 				if requestId := c.Writer.Header().Get(conf.HeaderKey); requestId != "" {
 					fields = append(fields, zap.String("request-id", requestId))
 				}
-				// if conf.Body {
-				// 	var rdr1 io.ReadCloser
-				// 	buf, err := ioutil.ReadAll(c.Request.Body)
-				// 	if err != nil {
-				// 		panic(err)
-				// 	}
-				// 	rdr1 = ioutil.NopCloser(bytes.NewBuffer(buf))
-				// 	rdr2 := ioutil.NopCloser(bytes.NewBuffer(buf))
-				// 	fields = append(fields, zap.String("body", readBody(rdr1)))
-				// 	c.Request.Body = rdr2
-				// }
+				if conf.Body {
+					var rdr1 io.ReadCloser
+					buf, err := ioutil.ReadAll(c.Request.Body)
+					if err != nil {
+						panic(err)
+					}
+					rdr1 = ioutil.NopCloser(bytes.NewBuffer(buf))
+					rdr2 := ioutil.NopCloser(bytes.NewBuffer(buf))
+					fields = append(fields, zap.String("body", readBody(rdr1)))
+					c.Request.Body = rdr2
+				}
 				if conf.TimeFormat != "" {
 					fields = append(fields, zap.String("time", end.Format(conf.TimeFormat)))
 				}
