@@ -3,6 +3,8 @@
 package ginzap
 
 import (
+	"bytes"
+	"io"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -20,6 +22,7 @@ import (
 type Config struct {
 	TimeFormat string
 	UTC        bool
+	Body       bool
 	SkipPaths  []string
 }
 
@@ -31,8 +34,8 @@ type Config struct {
 // It receives:
 //   1. A time package format string (e.g. time.RFC3339).
 //   2. A boolean stating whether to use UTC time zone or local.
-func Ginzap(logger *zap.Logger, timeFormat string, utc bool) gin.HandlerFunc {
-	return GinzapWithConfig(logger, &Config{TimeFormat: timeFormat, UTC: utc})
+func Ginzap(logger *zap.Logger, timeFormat string, utc, body bool) gin.HandlerFunc {
+	return GinzapWithConfig(logger, &Config{TimeFormat: timeFormat, UTC: utc, Body: body})
 }
 
 // GinzapWithConfig returns a gin.HandlerFunc using configs
@@ -62,11 +65,19 @@ func GinzapWithConfig(logger *zap.Logger, conf *Config) gin.HandlerFunc {
 					logger.Error(e)
 				}
 			} else {
+				var body []byte
+				if conf.Body {
+					var buf bytes.Buffer
+					tee := io.TeeReader(c.Request.Body, &buf)
+					body, _ = io.ReadAll(tee)
+					c.Request.Body = io.NopCloser(&buf)
+				}
 				fields := []zapcore.Field{
 					zap.Int("status", c.Writer.Status()),
 					zap.String("method", c.Request.Method),
 					zap.String("path", path),
 					zap.String("query", query),
+					zap.String("body", string(body)),
 					zap.String("ip", c.ClientIP()),
 					zap.String("user-agent", c.Request.UserAgent()),
 					zap.Duration("latency", latency),
