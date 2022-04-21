@@ -4,6 +4,7 @@ package ginzap
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net"
@@ -95,6 +96,7 @@ func GinzapWithConfig(logger *zap.Logger, conf *Config) gin.HandlerFunc {
 					fields = append(fields, zap.String("request-id", requestId))
 				}
 				if conf.Body {
+					fmt.Println(c.Request.Body, "this is body")
 					var rdr1 io.ReadCloser
 					buf, err := ioutil.ReadAll(c.Request.Body)
 					if err != nil {
