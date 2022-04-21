@@ -5,7 +5,6 @@ package ginzap
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -24,6 +23,7 @@ type Config struct {
 	TimeFormat string
 	UTC        bool
 	Body       bool
+	HeaderKey  string
 	SkipPaths  []string
 }
 
@@ -35,8 +35,13 @@ type Config struct {
 // It receives:
 //   1. A time package format string (e.g. time.RFC3339).
 //   2. A boolean stating whether to use UTC time zone or local.
-func Ginzap(logger *zap.Logger, timeFormat string, utc, body bool) gin.HandlerFunc {
-	return GinzapWithConfig(logger, &Config{TimeFormat: timeFormat, UTC: utc, Body: body})
+func Ginzap(logger *zap.Logger, timeFormat, headerKey string, utc, body bool) gin.HandlerFunc {
+	return GinzapWithConfig(logger, &Config{
+		TimeFormat: timeFormat,
+		UTC:        utc,
+		Body:       body,
+		HeaderKey:  headerKey,
+	})
 }
 
 // GinzapWithConfig returns a gin.HandlerFunc using configs
@@ -66,26 +71,39 @@ func GinzapWithConfig(logger *zap.Logger, conf *Config) gin.HandlerFunc {
 					logger.Error(e)
 				}
 			} else {
-				var rdr1 io.ReadCloser
-				if conf.Body {
-					buf, err := ioutil.ReadAll(c.Request.Body)
-					if err != nil {
-						panic(err)
-					}
-					rdr1 = ioutil.NopCloser(bytes.NewBuffer(buf))
-					rdr2 := ioutil.NopCloser(bytes.NewBuffer(buf))
-					c.Request.Body = rdr2
-				}
+				// if conf.Body {
+				// 	buf, err := ioutil.ReadAll(c.Request.Body)
+				// 	if err != nil {
+				// 		panic(err)
+				// 	}
+				// 	rdr1 = ioutil.NopCloser(bytes.NewBuffer(buf))
+				// 	rdr2 := ioutil.NopCloser(bytes.NewBuffer(buf))
+				// 	c.Request.Body = rdr2
+				// }
 				fields := []zapcore.Field{
 					zap.Int("status", c.Writer.Status()),
 					zap.String("method", c.Request.Method),
 					zap.String("path", path),
 					zap.String("query", query),
-					zap.String("body", readBody(rdr1)),
+					// zap.String("body", readBody(rdr1)),
 					zap.String("ip", c.ClientIP()),
 					zap.String("user-agent", c.Request.UserAgent()),
 					zap.Duration("latency", latency),
 				}
+				if requestId := c.Writer.Header().Get(conf.HeaderKey); requestId != "" {
+					fields = append(fields, zap.String("request-id", requestId))
+				}
+				// if conf.Body {
+				// 	var rdr1 io.ReadCloser
+				// 	buf, err := ioutil.ReadAll(c.Request.Body)
+				// 	if err != nil {
+				// 		panic(err)
+				// 	}
+				// 	rdr1 = ioutil.NopCloser(bytes.NewBuffer(buf))
+				// 	rdr2 := ioutil.NopCloser(bytes.NewBuffer(buf))
+				// 	fields = append(fields, zap.String("body", readBody(rdr1)))
+				// 	c.Request.Body = rdr2
+				// }
 				if conf.TimeFormat != "" {
 					fields = append(fields, zap.String("time", end.Format(conf.TimeFormat)))
 				}
