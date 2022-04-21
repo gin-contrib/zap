@@ -5,6 +5,7 @@ package ginzap
 import (
 	"bytes"
 	"io"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -65,19 +66,19 @@ func GinzapWithConfig(logger *zap.Logger, conf *Config) gin.HandlerFunc {
 					logger.Error(e)
 				}
 			} else {
-				var body []byte
+				var rdr1 io.ReadCloser
 				if conf.Body {
-					var buf bytes.Buffer
-					tee := io.TeeReader(c.Request.Body, &buf)
-					body, _ = io.ReadAll(tee)
-					c.Request.Body = io.NopCloser(&buf)
+					buf, _ := ioutil.ReadAll(c.Request.Body)
+					rdr1 = ioutil.NopCloser(bytes.NewBuffer(buf))
+					rdr2 := ioutil.NopCloser(bytes.NewBuffer(buf))
+					c.Request.Body = rdr2
 				}
 				fields := []zapcore.Field{
 					zap.Int("status", c.Writer.Status()),
 					zap.String("method", c.Request.Method),
 					zap.String("path", path),
 					zap.String("query", query),
-					zap.String("body", string(body)),
+					zap.String("body", readBody(rdr1)),
 					zap.String("ip", c.ClientIP()),
 					zap.String("user-agent", c.Request.UserAgent()),
 					zap.Duration("latency", latency),
@@ -89,6 +90,14 @@ func GinzapWithConfig(logger *zap.Logger, conf *Config) gin.HandlerFunc {
 			}
 		}
 	}
+}
+
+func readBody(reader io.Reader) string {
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(reader)
+
+	s := buf.String()
+	return s
 }
 
 // RecoveryWithZap returns a gin.HandlerFunc (middleware)
