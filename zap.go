@@ -96,7 +96,6 @@ func GinzapWithConfig(logger *zap.Logger, conf *Config) gin.HandlerFunc {
 					fields = append(fields, zap.String("request-id", requestId))
 				}
 				if conf.Body {
-					fmt.Println(c.Request.Body, "this is body")
 					var rdr1 io.ReadCloser
 					buf, err := ioutil.ReadAll(c.Request.Body)
 					if err != nil {
@@ -105,7 +104,8 @@ func GinzapWithConfig(logger *zap.Logger, conf *Config) gin.HandlerFunc {
 					rdr1 = ioutil.NopCloser(bytes.NewBuffer(buf))
 					rdr2 := ioutil.NopCloser(bytes.NewBuffer(buf))
 					fields = append(fields, zap.String("body", readBody(rdr1)))
-					fmt.Println(readBody(rdr1))
+					fmt.Println(c.Request.Body, "this is body")
+					fmt.Println(readBody(rdr1), len(readBody(rdr1)), "this is body string")
 					c.Request.Body = rdr2
 				}
 				if conf.TimeFormat != "" {
