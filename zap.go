@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -21,6 +22,7 @@ type Config struct {
 	TimeFormat string
 	UTC        bool
 	SkipPaths  []string
+	TraceID    bool // optionally log Open Telemetry TraceID
 }
 
 // Ginzap returns a gin.HandlerFunc (middleware) that logs requests using uber-go/zap.
@@ -73,6 +75,9 @@ func GinzapWithConfig(logger *zap.Logger, conf *Config) gin.HandlerFunc {
 				}
 				if conf.TimeFormat != "" {
 					fields = append(fields, zap.String("time", end.Format(conf.TimeFormat)))
+				}
+				if conf.TraceID {
+					fields = append(fields, zap.String("traceId", trace.SpanFromContext(c.Request.Context()).SpanContext().TraceID().String()))
 				}
 				logger.Info(path, fields...)
 			}

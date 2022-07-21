@@ -4,5 +4,6 @@ go 1.16
 
 require (
 	github.com/gin-gonic/gin v1.8.1
+	go.opentelemetry.io/otel/trace v1.8.0
 	go.uber.org/zap v1.19.1
 )
