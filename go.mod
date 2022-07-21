@@ -16,4 +16,6 @@ require (
 	golang.org/x/net v0.0.0-20220826154423-83b083e8dc8b // indirect
 	golang.org/x/sys v0.0.0-20220829200755-d48e67d00261 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
+	go.opentelemetry.io/otel/trace v1.8.0
+	go.uber.org/zap v1.19.1
 )

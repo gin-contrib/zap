@@ -82,3 +82,16 @@ r.Use(GinzapWithConfig(utcLogger, &Config{
   SkipPaths: []string{"/no_log"},
 }))
 ```
+
+## Log TraceId
+
+If you want to log Open Telemetry TraceId, use `GinzapWithConfig`.
+
+```go
+
+r.Use(ginzap.GinzapWithConfig(logger, &ginzap.Config{
+  TimeFormat: time.RFC3339,
+  UTC: true,
+  TraceID: true,
+}))
+```
