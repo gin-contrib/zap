@@ -88,10 +88,19 @@ r.Use(GinzapWithConfig(utcLogger, &Config{
 If you want to log Open Telemetry TraceId, use `GinzapWithConfig`.
 
 ```go
+import "go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
+
+r.Use(otelgin.Middleware("demo")) // middleware to extract trace from http request
 
 r.Use(ginzap.GinzapWithConfig(logger, &ginzap.Config{
   TimeFormat: time.RFC3339,
   UTC: true,
   TraceID: true,
 }))
+```
+
+This will add the `traceId` field to log:
+
+```
+{"level":"info","ts":1658442963.805288,"caller":"ginzap/zap.go:82","msg":"/test","status":200,"method":"GET","path":"/test","query":"","ip":"127.0.0.1","user-agent":"curl/7.29.0","latency":0.002036414,"time":"2022-07-21T22:36:03Z","traceId":"285f31ec1dba4b79034c4415ad18e4ed"}
 ```
