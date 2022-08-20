@@ -23,6 +23,11 @@ type Config struct {
 	SkipPaths  []string
 }
 
+type ZapLogger interface {
+	Info(msg string, fields ...zap.Field)
+	Error(msg string, fields ...zap.Field)
+}
+
 // Ginzap returns a gin.HandlerFunc (middleware) that logs requests using uber-go/zap.
 //
 // Requests with errors are logged using zap.Error().
@@ -31,12 +36,12 @@ type Config struct {
 // It receives:
 //   1. A time package format string (e.g. time.RFC3339).
 //   2. A boolean stating whether to use UTC time zone or local.
-func Ginzap(logger *zap.Logger, timeFormat string, utc bool) gin.HandlerFunc {
+func Ginzap(logger ZapLogger, timeFormat string, utc bool) gin.HandlerFunc {
 	return GinzapWithConfig(logger, &Config{TimeFormat: timeFormat, UTC: utc})
 }
 
 // GinzapWithConfig returns a gin.HandlerFunc using configs
-func GinzapWithConfig(logger *zap.Logger, conf *Config) gin.HandlerFunc {
+func GinzapWithConfig(logger ZapLogger, conf *Config) gin.HandlerFunc {
 	skipPaths := make(map[string]bool, len(conf.SkipPaths))
 	for _, path := range conf.SkipPaths {
 		skipPaths[path] = true
@@ -85,7 +90,7 @@ func GinzapWithConfig(logger *zap.Logger, conf *Config) gin.HandlerFunc {
 // All errors are logged using zap.Error().
 // stack means whether output the stack info.
 // The stack info is easy to find where the error occurs but the stack info is too large.
-func RecoveryWithZap(logger *zap.Logger, stack bool) gin.HandlerFunc {
+func RecoveryWithZap(logger ZapLogger, stack bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {
