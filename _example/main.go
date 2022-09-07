@@ -24,6 +24,12 @@ func main() {
 	//   - stack means whether output the stack info.
 	r.Use(ginzap.RecoveryWithZap(logger, true))
 
+	// Logs all panic to error log with a custom recovery handler
+	//  - stack means whether output the stack info.
+	// r.Use(ginzap.CustomRecoveryWithZap(logger, true, func(c *gin.Context, err interface{}){
+	// 	c.AbortWithStatus(http.StatusInternalServerError)
+	// }))
+
 	// Example ping request.
 	r.GET("/ping", func(c *gin.Context) {
 		c.String(200, "pong "+fmt.Sprint(time.Now().Unix()))
