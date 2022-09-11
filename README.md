@@ -83,9 +83,9 @@ r.Use(GinzapWithConfig(utcLogger, &Config{
 }))
 ```
 
-## Log TraceId
+## Log TraceID
 
-If you want to log Open Telemetry TraceId, use `GinzapWithConfig`.
+If you want to log [Open Telemetry](https://opentelemetry.io/) TraceID, use `GinzapWithConfig`.
 
 ```go
 import "go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
@@ -101,6 +101,20 @@ r.Use(ginzap.GinzapWithConfig(logger, &ginzap.Config{
 
 This will add the `traceId` field to log:
 
-```
-{"level":"info","ts":1658442963.805288,"caller":"ginzap/zap.go:82","msg":"/test","status":200,"method":"GET","path":"/test","query":"","ip":"127.0.0.1","user-agent":"curl/7.29.0","latency":0.002036414,"time":"2022-07-21T22:36:03Z","traceId":"285f31ec1dba4b79034c4415ad18e4ed"}
+```json
+{
+  "level": "info",
+  "ts": 1658442963.805288,
+  "caller": "ginzap/zap.go:82",
+  "msg": "/test",
+  "status": 200,
+  "method": "GET",
+  "path": "/test",
+  "query": "",
+  "ip": "127.0.0.1",
+  "user-agent": "curl/7.29.0",
+  "latency": 0.002036414,
+  "time": "2022-07-21T22:36:03Z",
+  "traceID": "285f31ec1dba4b79034c4415ad18e4ed"
+}
 ```
