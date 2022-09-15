@@ -23,7 +23,7 @@ func buildDummyLogger() (*zap.Logger, *observer.ObservedLogs) {
 	return logger, obs
 }
 
-func timestampLocationCheck(timestampStr string, location *time.Location) error {
+func timestampLocationCheck(t *testing.T, timestampStr string, location *time.Location) error {
 	timestamp, err := time.Parse(time.RFC3339, timestampStr)
 	if err != nil {
 		return err
@@ -62,7 +62,7 @@ func TestGinzap(t *testing.T) {
 		t.Fatalf("logged path should be /test but %s", pathStr)
 	}
 
-	err := timestampLocationCheck(logLine.Context[7].String, time.UTC)
+	err := timestampLocationCheck(t, logLine.Context[7].String, time.UTC)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -75,11 +75,6 @@ func TestGinzap(t *testing.T) {
 	pathStr = logLine.Context[2].String
 	if pathStr != "/test" {
 		t.Fatalf("logged path should be /test but %s", pathStr)
-	}
-
-	err = timestampLocationCheck(logLine.Context[7].String, time.Local)
-	if err != nil {
-		t.Fatal(err)
 	}
 }
 
@@ -123,7 +118,7 @@ func TestGinzapWithConfig(t *testing.T) {
 		t.Fatalf("logged path should be /test but %s", pathStr)
 	}
 
-	err := timestampLocationCheck(logLine.Context[7].String, time.UTC)
+	err := timestampLocationCheck(t, logLine.Context[7].String, time.UTC)
 	if err != nil {
 		t.Fatal(err)
 	}
