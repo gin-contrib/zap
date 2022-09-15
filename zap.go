@@ -25,7 +25,7 @@ type Config struct {
 	UTC        bool
 	SkipPaths  []string
 	TraceID    bool // optionally log Open Telemetry TraceID
-	Fields     Fn
+	Context    Fn
 }
 
 // Ginzap returns a gin.HandlerFunc (middleware) that logs requests using uber-go/zap.
@@ -77,8 +77,8 @@ func GinzapWithConfig(logger *zap.Logger, conf *Config) gin.HandlerFunc {
 				fields = append(fields, zap.String("traceID", trace.SpanFromContext(c.Request.Context()).SpanContext().TraceID().String()))
 			}
 
-			if conf.Fields != nil {
-				fields = append(fields, conf.Fields(c)...)
+			if conf.Context != nil {
+				fields = append(fields, conf.Context(c)...)
 			}
 
 			if len(c.Errors) > 0 {
