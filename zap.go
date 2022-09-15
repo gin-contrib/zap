@@ -17,12 +17,15 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+type Fn func(c *gin.Context) []zapcore.Field
+
 // Config is config setting for Ginzap
 type Config struct {
 	TimeFormat string
 	UTC        bool
 	SkipPaths  []string
 	TraceID    bool // optionally log Open Telemetry TraceID
+	Fields     Fn
 }
 
 // Ginzap returns a gin.HandlerFunc (middleware) that logs requests using uber-go/zap.
@@ -72,6 +75,10 @@ func GinzapWithConfig(logger *zap.Logger, conf *Config) gin.HandlerFunc {
 			}
 			if conf.TraceID {
 				fields = append(fields, zap.String("traceID", trace.SpanFromContext(c.Request.Context()).SpanContext().TraceID().String()))
+			}
+
+			if conf.Fields != nil {
+				fields = append(fields, conf.Fields(c)...)
 			}
 
 			if len(c.Errors) > 0 {
