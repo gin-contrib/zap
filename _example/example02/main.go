@@ -7,6 +7,7 @@ import (
 	"time"
 
 	ginzap "github.com/gin-contrib/zap"
+
 	"github.com/gin-gonic/gin"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
@@ -23,9 +24,15 @@ func main() {
 		TimeFormat: time.RFC3339,
 		Context: ginzap.Fn(func(c *gin.Context) []zapcore.Field {
 			fields := []zapcore.Field{}
-			// log response ID
+			// log request ID
 			if requestID := c.Writer.Header().Get("X-Request-Id"); requestID != "" {
-				fields = append(fields, zap.String("request-id", requestID))
+				fields = append(fields, zap.String("request_id", requestID))
+			}
+
+			// log trace and span ID
+			if trace.SpanFromContext(c.Request.Context()).SpanContext().IsValid() {
+				fields = append(fields, zap.String("trace_id", trace.SpanFromContext(c.Request.Context()).SpanContext().TraceID().String()))
+				fields = append(fields, zap.String("span_id", trace.SpanFromContext(c.Request.Context()).SpanContext().SpanID().String()))
 			}
 
 			// log request body
@@ -35,9 +42,6 @@ func main() {
 			body, _ = io.ReadAll(tee)
 			c.Request.Body = io.NopCloser(&buf)
 			fields = append(fields, zap.String("body", string(body)))
-
-			// support opentelemetry trace ID
-			fields = append(fields, zap.String("traceID", trace.SpanFromContext(c.Request.Context()).SpanContext().TraceID().String()))
 
 			return fields
 		}),
