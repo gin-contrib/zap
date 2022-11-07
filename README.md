@@ -25,7 +25,7 @@ import "github.com/gin-contrib/zap"
 
 ## Example
 
-See the [example](example/main.go).
+See the [example](_example/example01/main.go).
 
 ```go
 package main
