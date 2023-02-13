@@ -20,10 +20,11 @@ type Fn func(c *gin.Context) []zapcore.Field
 
 // Config is config setting for Ginzap
 type Config struct {
-	TimeFormat string
-	UTC        bool
-	SkipPaths  []string
-	Context    Fn
+	TimeFormat   string
+	UTC          bool
+	SkipPaths    []string
+	Context      Fn
+	DefaultLevel zapcore.Level
 }
 
 // Ginzap returns a gin.HandlerFunc (middleware) that logs requests using uber-go/zap.
@@ -35,7 +36,7 @@ type Config struct {
 //  1. A time package format string (e.g. time.RFC3339).
 //  2. A boolean stating whether to use UTC time zone or local.
 func Ginzap(logger *zap.Logger, timeFormat string, utc bool) gin.HandlerFunc {
-	return GinzapWithConfig(logger, &Config{TimeFormat: timeFormat, UTC: utc})
+	return GinzapWithConfig(logger, &Config{TimeFormat: timeFormat, UTC: utc, DefaultLevel: zapcore.InfoLevel})
 }
 
 // GinzapWithConfig returns a gin.HandlerFunc using configs
@@ -82,7 +83,7 @@ func GinzapWithConfig(logger *zap.Logger, conf *Config) gin.HandlerFunc {
 					logger.Error(e, fields...)
 				}
 			} else {
-				logger.Info(path, fields...)
+				logger.Log(conf.DefaultLevel, path, fields...)
 			}
 		}
 	}
