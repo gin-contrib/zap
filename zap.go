@@ -20,10 +20,11 @@ type Fn func(c *gin.Context) []zapcore.Field
 
 // Config is config setting for Ginzap
 type Config struct {
-	TimeFormat string
-	UTC        bool
-	SkipPaths  []string
-	Context    Fn
+	TimeFormat   string
+	UTC          bool
+	SkipPaths    []string
+	SkipPrefixes []string
+	Context      Fn
 }
 
 // Ginzap returns a gin.HandlerFunc (middleware) that logs requests using uber-go/zap.
@@ -52,7 +53,7 @@ func GinzapWithConfig(logger *zap.Logger, conf *Config) gin.HandlerFunc {
 		query := c.Request.URL.RawQuery
 		c.Next()
 
-		if _, ok := skipPaths[path]; !ok {
+		if _, ok := skipPaths[path]; !ok && !isPathContainSkipPrefixes(path, conf.SkipPrefixes) {
 			end := time.Now()
 			latency := end.Sub(start)
 			if conf.UTC {
@@ -152,4 +153,13 @@ func CustomRecoveryWithZap(logger *zap.Logger, stack bool, recovery gin.Recovery
 		}()
 		c.Next()
 	}
+}
+
+func isPathContainSkipPrefixes(path string, skipPrefixes []string) bool {
+	for _, prefix := range skipPrefixes {
+		if strings.HasPrefix(path, prefix) {
+			return true
+		}
+	}
+	return false
 }

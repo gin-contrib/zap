@@ -83,9 +83,10 @@ func TestGinzapWithConfig(t *testing.T) {
 
 	utcLogger, utcLoggerObserved := buildDummyLogger()
 	r.Use(GinzapWithConfig(utcLogger, &Config{
-		TimeFormat: time.RFC3339,
-		UTC:        true,
-		SkipPaths:  []string{"/no_log"},
+		TimeFormat:   time.RFC3339,
+		UTC:          true,
+		SkipPaths:    []string{"/no_log"},
+		SkipPrefixes: []string{"/skip_prefix"},
 	}))
 
 	r.GET("/test", func(c *gin.Context) {
@@ -93,6 +94,14 @@ func TestGinzapWithConfig(t *testing.T) {
 	})
 
 	r.GET("/no_log", func(c *gin.Context) {
+		c.JSON(204, nil)
+	})
+
+	r.GET("/skip_prefix/no_log_a", func(c *gin.Context) {
+		c.JSON(204, nil)
+	})
+
+	r.GET("/skip_prefix/no_log_b", func(c *gin.Context) {
 		c.JSON(204, nil)
 	})
 
@@ -106,6 +115,22 @@ func TestGinzapWithConfig(t *testing.T) {
 
 	if res2.Code != 204 {
 		t.Fatalf("request /no_log is failed (%d)", res2.Code)
+	}
+
+	res3 := httptest.NewRecorder()
+	req3, _ := http.NewRequest("GET", "/skip_prefix/no_log_a", nil)
+	r.ServeHTTP(res3, req3)
+
+	if res3.Code != 204 {
+		t.Fatalf("request /skip_prefix/no_log_a is failed (%d)", res3.Code)
+	}
+
+	res4 := httptest.NewRecorder()
+	req4, _ := http.NewRequest("GET", "/skip_prefix/no_log_b", nil)
+	r.ServeHTTP(res4, req4)
+
+	if res4.Code != 204 {
+		t.Fatalf("request /skip_prefix/no_log_b is failed (%d)", res4.Code)
 	}
 
 	if len(utcLoggerObserved.All()) != 1 {
