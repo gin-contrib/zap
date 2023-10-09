@@ -75,11 +75,13 @@ When you want to skip logging for specific path,
 please use GinzapWithConfig
 
 ```go
+regexp1 := regexp.MustCompile(`^/regexp\d*`)
 
 r.Use(GinzapWithConfig(utcLogger, &Config{
   TimeFormat: time.RFC3339,
   UTC: true,
   SkipPaths: []string{"/no_log"},
+  SkipRegexpPaths: []*regexp.Regexp{regexp1},
 }))
 ```
 
