@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"os"
+	"regexp"
 	"runtime/debug"
 	"strings"
 	"time"
@@ -26,10 +27,11 @@ type ZapLogger interface {
 
 // Config is config setting for Ginzap
 type Config struct {
-	TimeFormat string
-	UTC        bool
-	SkipPaths  []string
-	Context    Fn
+	TimeFormat      string
+	UTC             bool
+	SkipPaths       []string
+	SkipRegexpPaths []*regexp.Regexp
+	Context         Fn
 }
 
 // Ginzap returns a gin.HandlerFunc (middleware) that logs requests using uber-go/zap.
@@ -58,38 +60,51 @@ func GinzapWithConfig(logger ZapLogger, conf *Config) gin.HandlerFunc {
 		query := c.Request.URL.RawQuery
 		c.Next()
 
-		if _, ok := skipPaths[path]; !ok {
-			end := time.Now()
-			latency := end.Sub(start)
-			if conf.UTC {
-				end = end.UTC()
-			}
+		var track = true
+		if _, ok := skipPaths[path]; ok {
+			track = false
+		}
 
-			fields := []zapcore.Field{
-				zap.Int("status", c.Writer.Status()),
-				zap.String("method", c.Request.Method),
-				zap.String("path", path),
-				zap.String("query", query),
-				zap.String("ip", c.ClientIP()),
-				zap.String("user-agent", c.Request.UserAgent()),
-				zap.Duration("latency", latency),
+		for _, reg := range conf.SkipRegexpPaths {
+			if reg.MatchString(path) {
+				track = false
 			}
-			if conf.TimeFormat != "" {
-				fields = append(fields, zap.String("time", end.Format(conf.TimeFormat)))
-			}
+		}
 
-			if conf.Context != nil {
-				fields = append(fields, conf.Context(c)...)
-			}
+		if !track {
+			return
+		}
 
-			if len(c.Errors) > 0 {
-				// Append error field if this is an erroneous request.
-				for _, e := range c.Errors.Errors() {
-					logger.Error(e, fields...)
-				}
-			} else {
-				logger.Info(path, fields...)
+		end := time.Now()
+		latency := end.Sub(start)
+		if conf.UTC {
+			end = end.UTC()
+		}
+
+		fields := []zapcore.Field{
+			zap.Int("status", c.Writer.Status()),
+			zap.String("method", c.Request.Method),
+			zap.String("path", path),
+			zap.String("query", query),
+			zap.String("ip", c.ClientIP()),
+			zap.String("user-agent", c.Request.UserAgent()),
+			zap.Duration("latency", latency),
+		}
+		if conf.TimeFormat != "" {
+			fields = append(fields, zap.String("time", end.Format(conf.TimeFormat)))
+		}
+
+		if conf.Context != nil {
+			fields = append(fields, conf.Context(c)...)
+		}
+
+		if len(c.Errors) > 0 {
+			// Append error field if this is an erroneous request.
+			for _, e := range c.Errors.Errors() {
+				logger.Error(e, fields...)
 			}
+		} else {
+			logger.Info(path, fields...)
 		}
 	}
 }
