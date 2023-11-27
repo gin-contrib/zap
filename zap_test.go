@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"go.uber.org/zap/zaptest/observer"
 )
 
@@ -83,9 +84,10 @@ func TestGinzapWithConfig(t *testing.T) {
 
 	utcLogger, utcLoggerObserved := buildDummyLogger()
 	r.Use(GinzapWithConfig(utcLogger, &Config{
-		TimeFormat: time.RFC3339,
-		UTC:        true,
-		SkipPaths:  []string{"/no_log"},
+		TimeFormat:   time.RFC3339,
+		UTC:          true,
+		SkipPaths:    []string{"/no_log"},
+		DefaultLevel: zapcore.WarnLevel,
 	}))
 
 	r.GET("/test", func(c *gin.Context) {
@@ -121,5 +123,9 @@ func TestGinzapWithConfig(t *testing.T) {
 	err := timestampLocationCheck(t, logLine.Context[7].String, time.UTC)
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	if logLine.Level != zapcore.WarnLevel {
+		t.Fatalf("log level should be warn but was %s", logLine.Level.String())
 	}
 }
