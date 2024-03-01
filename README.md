@@ -7,6 +7,10 @@
 
 Alternative logging through [zap](https://github.com/uber-go/zap). Thanks for [Pull Request](https://github.com/gin-gonic/contrib/pull/129) from [@yezooz](https://github.com/yezooz)
 
+## Requirement
+
+Require Go **1.19** or later.
+
 ## Usage
 
 ### Start using it
