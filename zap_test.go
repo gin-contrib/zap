@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
 	"testing"
 	"time"
 
@@ -146,6 +147,51 @@ func TestLoggerSkipper(t *testing.T) {
 		Skipper: func(c *gin.Context) bool {
 			return c.Request.URL.Path == "/no_log"
 		},
+	}))
+
+	r.GET(testPath, func(c *gin.Context) {
+		c.JSON(204, nil)
+	})
+
+	r.GET("/no_log", func(c *gin.Context) {
+		c.JSON(204, nil)
+	})
+
+	res1 := httptest.NewRecorder()
+	req1, _ := http.NewRequestWithContext(ctx, "GET", testPath, nil)
+	r.ServeHTTP(res1, req1)
+
+	res2 := httptest.NewRecorder()
+	req2, _ := http.NewRequestWithContext(ctx, "GET", "/no_log", nil)
+	r.ServeHTTP(res2, req2)
+
+	if res2.Code != 204 {
+		t.Fatalf("request /no_log is failed (%d)", res2.Code)
+	}
+
+	if len(utcLoggerObserved.All()) != 1 {
+		t.Fatalf("Log should be 1 line but there're %d", len(utcLoggerObserved.All()))
+	}
+
+	logLine := utcLoggerObserved.All()[0]
+	pathStr := logLine.Context[2].String
+	if pathStr != testPath {
+		t.Fatalf("logged path should be /test but %s", pathStr)
+	}
+}
+
+func TestSkipPathRegexps(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	r := gin.New()
+
+	rxURL := regexp.MustCompile(`^/no_\s*`)
+
+	utcLogger, utcLoggerObserved := buildDummyLogger()
+	r.Use(GinzapWithConfig(utcLogger, &Config{
+		TimeFormat:      time.RFC3339,
+		UTC:             true,
+		SkipPathRegexps: []*regexp.Regexp{rxURL},
 	}))
 
 	r.GET(testPath, func(c *gin.Context) {
