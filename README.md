@@ -142,6 +142,8 @@ func main() {
 }
 ```
 
+## Custom `skipper` function
+
 Example for custom `skipper` function
 
 ```go
