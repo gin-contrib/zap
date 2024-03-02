@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"os"
+	"regexp"
 	"runtime/debug"
 	"strings"
 	"time"
@@ -29,11 +30,12 @@ type ZapLogger interface {
 
 // Config is config setting for Ginzap
 type Config struct {
-	TimeFormat   string
-	UTC          bool
-	SkipPaths    []string
-	Context      Fn
-	DefaultLevel zapcore.Level
+	TimeFormat      string
+	UTC             bool
+	SkipPaths       []string
+	SkipPathRegexps []*regexp.Regexp
+	Context         Fn
+	DefaultLevel    zapcore.Level
 	// skip is a Skipper that indicates which logs should not be written.
 	// Optional.
 	Skipper Skipper
@@ -68,6 +70,17 @@ func GinzapWithConfig(logger ZapLogger, conf *Config) gin.HandlerFunc {
 
 		if _, ok := skipPaths[path]; ok || (conf.Skipper != nil && conf.Skipper(c)) {
 			track = false
+		}
+
+		if track && len(conf.SkipPathRegexps) > 0 {
+			for _, reg := range conf.SkipPathRegexps {
+				if !reg.MatchString(path) {
+					continue
+				}
+
+				track = false
+				break
+			}
 		}
 
 		if track {
