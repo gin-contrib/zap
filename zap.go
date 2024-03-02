@@ -18,6 +18,9 @@ import (
 
 type Fn func(c *gin.Context) []zapcore.Field
 
+// Skipper is a function to skip logs based on provided Context
+type Skipper func(c *gin.Context) bool
+
 // ZapLogger is the minimal logger interface compatible with zap.Logger
 type ZapLogger interface {
 	Info(msg string, fields ...zap.Field)
@@ -31,6 +34,9 @@ type Config struct {
 	SkipPaths    []string
 	Context      Fn
 	DefaultLevel zapcore.Level
+	// skip is a Skipper that indicates which logs should not be written.
+	// Optional.
+	Skipper Skipper
 }
 
 // Ginzap returns a gin.HandlerFunc (middleware) that logs requests using uber-go/zap.
@@ -59,7 +65,7 @@ func GinzapWithConfig(logger ZapLogger, conf *Config) gin.HandlerFunc {
 		query := c.Request.URL.RawQuery
 		c.Next()
 
-		if _, ok := skipPaths[path]; !ok {
+		if _, ok := skipPaths[path]; !ok && (conf.Skipper != nil && !conf.Skipper(c)) {
 			end := time.Now()
 			latency := end.Sub(start)
 			if conf.UTC {
