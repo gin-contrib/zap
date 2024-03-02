@@ -64,8 +64,13 @@ func GinzapWithConfig(logger ZapLogger, conf *Config) gin.HandlerFunc {
 		path := c.Request.URL.Path
 		query := c.Request.URL.RawQuery
 		c.Next()
+		track := true
 
-		if _, ok := skipPaths[path]; !ok && (conf.Skipper != nil && !conf.Skipper(c)) {
+		if _, ok := skipPaths[path]; ok || (conf.Skipper != nil && conf.Skipper(c)) {
+			track = false
+		}
+
+		if track {
 			end := time.Now()
 			latency := end.Sub(start)
 			if conf.UTC {
