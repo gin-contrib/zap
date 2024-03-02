@@ -14,10 +14,6 @@ import (
 	"go.uber.org/zap/zaptest/observer"
 )
 
-func init() {
-	gin.SetMode(gin.TestMode)
-}
-
 func buildDummyLogger() (*zap.Logger, *observer.ObservedLogs) {
 	core, obs := observer.New(zap.InfoLevel)
 	logger := zap.New(core)
