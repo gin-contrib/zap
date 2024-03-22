@@ -116,6 +116,8 @@ func GinzapWithConfig(logger ZapLogger, conf *Config) gin.HandlerFunc {
 				zl, ok := logger.(*zap.Logger)
 				if ok {
 					zl.Log(conf.DefaultLevel, "", fields...)
+				} else if conf.DefaultLevel == zapcore.InfoLevel {
+					logger.Info(path, fields...)
 				} else {
 					logger.Error(path, fields...)
 				}
@@ -165,7 +167,7 @@ func CustomRecoveryWithZap(logger ZapLogger, stack bool, recovery gin.RecoveryFu
 						zap.String("request", string(httpRequest)),
 					)
 					// If the connection is dead, we can't write a status to it.
-					c.Error(err.(error)) //nolint: errcheck
+					c.Error(err.(error)) // nolint: errcheck
 					c.Abort()
 					return
 				}
