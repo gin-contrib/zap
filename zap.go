@@ -113,9 +113,10 @@ func GinzapWithConfig(logger ZapLogger, conf *Config) gin.HandlerFunc {
 					logger.Error(e, fields...)
 				}
 			} else {
-				zl, ok := logger.(*zap.Logger)
-				if ok {
+				if zl, ok := logger.(*zap.Logger); ok {
 					zl.Log(conf.DefaultLevel, "", fields...)
+				} else if conf.DefaultLevel == zapcore.InfoLevel {
+					logger.Info(path, fields...)
 				} else {
 					logger.Error(path, fields...)
 				}
