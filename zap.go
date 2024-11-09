@@ -17,6 +17,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+// Fn is a function to get zap fields from gin.Context
 type Fn func(c *gin.Context) []zapcore.Field
 
 // Skipper is a function to skip logs based on provided Context
