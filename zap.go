@@ -37,6 +37,7 @@ type Config struct {
 	SkipPathRegexps []*regexp.Regexp
 	Context         Fn
 	DefaultLevel    zapcore.Level
+	LogErrorsOnce   bool
 	// skip is a Skipper that indicates which logs should not be written.
 	// Optional.
 	Skipper Skipper
@@ -116,9 +117,13 @@ func GinzapWithConfig(logger ZapLogger, conf *Config) gin.HandlerFunc {
 			}
 
 			if len(c.Errors) > 0 {
-				// Append error field if this is an erroneous request.
-				for _, e := range c.Errors.Errors() {
-					logger.Error(e, fields...)
+				if conf.LogErrorsOnce {
+					logger.Error(c.Errors.String(), fields...)
+				} else {
+					// Append error field if this is an erroneous request.
+					for _, e := range c.Errors.Errors() {
+						logger.Error(e, fields...)
+					}
 				}
 			} else {
 				if zl, ok := logger.(*zap.Logger); ok {
