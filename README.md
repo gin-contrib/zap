@@ -2,7 +2,7 @@
 
 [![Run Tests](https://github.com/gin-contrib/zap/actions/workflows/go.yml/badge.svg)](https://github.com/gin-contrib/zap/actions/workflows/go.yml)
 [![Trivy Security Scan](https://github.com/gin-contrib/zap/actions/workflows/trivy-scan.yml/badge.svg)](https://github.com/gin-contrib/zap/actions/workflows/trivy-scan.yml)
-[![GoDoc](https://godoc.org/github.com/gin-contrib/zap?status.svg)](https://godoc.org/github.com/gin-contrib/zap)
+[![Go Reference](https://pkg.go.dev/badge/github.com/gin-contrib/zap.svg)](https://pkg.go.dev/github.com/gin-contrib/zap)
 
 Alternative logging through [zap](https://github.com/uber-go/zap). Thanks for [Pull Request](https://github.com/gin-gonic/contrib/pull/129) from [@yezooz](https://github.com/yezooz)
 
