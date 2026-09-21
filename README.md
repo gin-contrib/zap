@@ -8,7 +8,7 @@ Alternative logging through [zap](https://github.com/uber-go/zap). Thanks for [P
 
 ## Requirement
 
-Require Go **1.19** or later.
+Require Go **1.26** or later.
 
 ## Usage
 
