@@ -51,7 +51,10 @@ type Config struct {
 //  1. A time package format string (e.g. time.RFC3339).
 //  2. A boolean stating whether to use UTC time zone or local.
 func Ginzap(logger ZapLogger, timeFormat string, utc bool) gin.HandlerFunc {
-	return GinzapWithConfig(logger, &Config{TimeFormat: timeFormat, UTC: utc, DefaultLevel: zapcore.InfoLevel})
+	return GinzapWithConfig(
+		logger,
+		&Config{TimeFormat: timeFormat, UTC: utc, DefaultLevel: zapcore.InfoLevel},
+	)
 }
 
 // GinzapWithConfig returns a gin.HandlerFunc (middleware) that logs requests using uber-go/zap.
@@ -62,6 +65,8 @@ func Ginzap(logger ZapLogger, timeFormat string, utc bool) gin.HandlerFunc {
 // It receives a Config struct and a ZapLogger.
 // The Config struct allows you to configure the logging format, the time format, and the UTC time zone.
 // The ZapLogger is the minimal logger interface compatible with zap.Logger.
+//
+//nolint:revive // exported func name kept for API compatibility
 func GinzapWithConfig(logger ZapLogger, conf *Config) gin.HandlerFunc {
 	skipPaths := make(map[string]bool, len(conf.SkipPaths))
 	for _, path := range conf.SkipPaths {
@@ -133,7 +138,7 @@ func GinzapWithConfig(logger ZapLogger, conf *Config) gin.HandlerFunc {
 	}
 }
 
-func defaultHandleRecovery(c *gin.Context, err interface{}) {
+func defaultHandleRecovery(c *gin.Context, err any) {
 	c.AbortWithStatus(http.StatusInternalServerError)
 }
 
@@ -151,7 +156,11 @@ func RecoveryWithZap(logger ZapLogger, stack bool) gin.HandlerFunc {
 // All errors are logged using zap.Error().
 // stack means whether output the stack info.
 // The stack info is easy to find where the error occurs but the stack info is too large.
-func CustomRecoveryWithZap(logger ZapLogger, stack bool, recovery gin.RecoveryFunc) gin.HandlerFunc {
+func CustomRecoveryWithZap(
+	logger ZapLogger,
+	stack bool,
+	recovery gin.RecoveryFunc,
+) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {
@@ -161,7 +170,10 @@ func CustomRecoveryWithZap(logger ZapLogger, stack bool, recovery gin.RecoveryFu
 				if ne, ok := err.(*net.OpError); ok {
 					if se, ok := ne.Err.(*os.SyscallError); ok {
 						if strings.Contains(strings.ToLower(se.Error()), "broken pipe") ||
-							strings.Contains(strings.ToLower(se.Error()), "connection reset by peer") {
+							strings.Contains(
+								strings.ToLower(se.Error()),
+								"connection reset by peer",
+							) {
 							brokenPipe = true
 						}
 					}
@@ -174,7 +186,7 @@ func CustomRecoveryWithZap(logger ZapLogger, stack bool, recovery gin.RecoveryFu
 						zap.String("request", string(httpRequest)),
 					)
 					// If the connection is dead, we can't write a status to it.
-					c.Error(err.(error)) //nolint: errcheck
+					c.Error(err.(error)) //nolint:errcheck // best-effort write to a dead connection
 					c.Abort()
 					return
 				}
