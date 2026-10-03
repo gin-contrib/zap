@@ -1,7 +1,6 @@
 package ginzap
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -10,7 +9,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"go.uber.org/zap/zaptest/observer"
@@ -37,8 +35,7 @@ func timestampLocationCheck(timestampStr string, location *time.Location) error 
 }
 
 func TestGinzap(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 	r := gin.New()
 
 	utcLogger, utcLoggerObserved := buildDummyLogger()
@@ -52,7 +49,7 @@ func TestGinzap(t *testing.T) {
 	})
 
 	res1 := httptest.NewRecorder()
-	req1, _ := http.NewRequestWithContext(ctx, "GET", testPath, nil)
+	req1, _ := http.NewRequestWithContext(ctx, http.MethodGet, testPath, nil)
 	r.ServeHTTP(res1, req1)
 
 	if len(utcLoggerObserved.All()) != 1 {
@@ -82,8 +79,7 @@ func TestGinzap(t *testing.T) {
 }
 
 func TestGinzapWithConfig(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	r := gin.New()
 
@@ -104,11 +100,11 @@ func TestGinzapWithConfig(t *testing.T) {
 	})
 
 	res1 := httptest.NewRecorder()
-	req1, _ := http.NewRequestWithContext(ctx, "GET", testPath, nil)
+	req1, _ := http.NewRequestWithContext(ctx, http.MethodGet, testPath, nil)
 	r.ServeHTTP(res1, req1)
 
 	res2 := httptest.NewRecorder()
-	req2, _ := http.NewRequestWithContext(ctx, "GET", "/no_log", nil)
+	req2, _ := http.NewRequestWithContext(ctx, http.MethodGet, "/no_log", nil)
 	r.ServeHTTP(res2, req2)
 
 	if res2.Code != 204 {
@@ -136,8 +132,7 @@ func TestGinzapWithConfig(t *testing.T) {
 }
 
 func TestLoggerSkipper(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 	r := gin.New()
 
 	utcLogger, utcLoggerObserved := buildDummyLogger()
@@ -158,11 +153,11 @@ func TestLoggerSkipper(t *testing.T) {
 	})
 
 	res1 := httptest.NewRecorder()
-	req1, _ := http.NewRequestWithContext(ctx, "GET", testPath, nil)
+	req1, _ := http.NewRequestWithContext(ctx, http.MethodGet, testPath, nil)
 	r.ServeHTTP(res1, req1)
 
 	res2 := httptest.NewRecorder()
-	req2, _ := http.NewRequestWithContext(ctx, "GET", "/no_log", nil)
+	req2, _ := http.NewRequestWithContext(ctx, http.MethodGet, "/no_log", nil)
 	r.ServeHTTP(res2, req2)
 
 	if res2.Code != 204 {
@@ -181,8 +176,7 @@ func TestLoggerSkipper(t *testing.T) {
 }
 
 func TestSkipPathRegexps(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 	r := gin.New()
 
 	rxURL := regexp.MustCompile(`^/no_\s*`)
@@ -203,11 +197,11 @@ func TestSkipPathRegexps(t *testing.T) {
 	})
 
 	res1 := httptest.NewRecorder()
-	req1, _ := http.NewRequestWithContext(ctx, "GET", testPath, nil)
+	req1, _ := http.NewRequestWithContext(ctx, http.MethodGet, testPath, nil)
 	r.ServeHTTP(res1, req1)
 
 	res2 := httptest.NewRecorder()
-	req2, _ := http.NewRequestWithContext(ctx, "GET", "/no_log", nil)
+	req2, _ := http.NewRequestWithContext(ctx, http.MethodGet, "/no_log", nil)
 	r.ServeHTTP(res2, req2)
 
 	if res2.Code != 204 {
