@@ -3,6 +3,7 @@
 package ginzap
 
 import (
+	"maps"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -37,6 +38,9 @@ type Config struct {
 	SkipPathRegexps []*regexp.Regexp
 	Context         Fn
 	DefaultLevel    zapcore.Level
+	// PathLevels overrides DefaultLevel for exact original request paths.
+	// Requests with c.Errors continue to be logged at Error level.
+	PathLevels map[string]zapcore.Level
 	// skip is a Skipper that indicates which logs should not be written.
 	// Optional.
 	Skipper Skipper
@@ -68,6 +72,7 @@ func Ginzap(logger ZapLogger, timeFormat string, utc bool) gin.HandlerFunc {
 //
 //nolint:revive // exported func name kept for API compatibility
 func GinzapWithConfig(logger ZapLogger, conf *Config) gin.HandlerFunc {
+	pathLevels := maps.Clone(conf.PathLevels)
 	skipPaths := make(map[string]bool, len(conf.SkipPaths))
 	for _, path := range conf.SkipPaths {
 		skipPaths[path] = true
@@ -126,9 +131,13 @@ func GinzapWithConfig(logger ZapLogger, conf *Config) gin.HandlerFunc {
 					logger.Error(e, fields...)
 				}
 			} else {
+				level := conf.DefaultLevel
+				if override, ok := pathLevels[path]; ok {
+					level = override
+				}
 				if zl, ok := logger.(*zap.Logger); ok {
-					zl.Log(conf.DefaultLevel, path, fields...)
-				} else if conf.DefaultLevel == zapcore.InfoLevel {
+					zl.Log(level, path, fields...)
+				} else if level == zapcore.InfoLevel {
 					logger.Info(path, fields...)
 				} else {
 					logger.Error(path, fields...)
