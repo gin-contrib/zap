@@ -23,6 +23,9 @@ type Fn func(c *gin.Context) []zapcore.Field
 // Skipper is a function to skip logs based on provided Context
 type Skipper func(c *gin.Context) bool
 
+// StatusLevelMapper selects a log level from the final HTTP response status.
+type StatusLevelMapper func(status int) zapcore.Level
+
 // ZapLogger is the minimal logger interface compatible with zap.Logger
 type ZapLogger interface {
 	Info(msg string, fields ...zap.Field)
@@ -37,6 +40,9 @@ type Config struct {
 	SkipPathRegexps []*regexp.Regexp
 	Context         Fn
 	DefaultLevel    zapcore.Level
+	// StatusLevelMapper overrides the level for both successful and erroneous requests.
+	// Nil preserves DefaultLevel and Error logging for c.Errors.
+	StatusLevelMapper StatusLevelMapper
 	// skip is a Skipper that indicates which logs should not be written.
 	// Optional.
 	Skipper Skipper
@@ -121,11 +127,23 @@ func GinzapWithConfig(logger ZapLogger, conf *Config) gin.HandlerFunc {
 			}
 
 			if len(c.Errors) > 0 {
+				if conf.StatusLevelMapper != nil {
+					level := conf.StatusLevelMapper(c.Writer.Status())
+					for _, e := range c.Errors.Errors() {
+						logStatusLevel(logger, level, e, fields...)
+					}
+					return
+				}
 				// Append error field if this is an erroneous request.
 				for _, e := range c.Errors.Errors() {
 					logger.Error(e, fields...)
 				}
 			} else {
+				if conf.StatusLevelMapper != nil {
+					level := conf.StatusLevelMapper(c.Writer.Status())
+					logStatusLevel(logger, level, path, fields...)
+					return
+				}
 				if zl, ok := logger.(*zap.Logger); ok {
 					zl.Log(conf.DefaultLevel, path, fields...)
 				} else if conf.DefaultLevel == zapcore.InfoLevel {
@@ -135,6 +153,20 @@ func GinzapWithConfig(logger ZapLogger, conf *Config) gin.HandlerFunc {
 				}
 			}
 		}
+	}
+}
+
+// Log-capable loggers support every level. Minimal ZapLogger implementations
+// use Info below ErrorLevel and Error otherwise.
+func logStatusLevel(logger ZapLogger, level zapcore.Level, message string, fields ...zap.Field) {
+	if leveled, ok := logger.(interface {
+		Log(zapcore.Level, string, ...zap.Field)
+	}); ok {
+		leveled.Log(level, message, fields...)
+	} else if level < zapcore.ErrorLevel {
+		logger.Info(message, fields...)
+	} else {
+		logger.Error(message, fields...)
 	}
 }
 
