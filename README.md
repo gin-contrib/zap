@@ -12,6 +12,21 @@ Require Go **1.26** or later.
 
 ## Usage
 
+### Path-specific log levels
+
+Use `Config.PathLevels` to override `DefaultLevel` for exact request paths:
+
+```go
+ginzap.Config{PathLevels: map[string]zapcore.Level{
+    "/health": zapcore.DebugLevel,
+    "/metrics": zapcore.DebugLevel,
+}}
+```
+
+Matching uses the original URL path, excluding the query string. The map is copied when constructing
+the middleware, so later caller changes do not affect it. Skip rules still take precedence, and requests
+with `c.Errors` still log at Error level. Logger support for each level is the same as `DefaultLevel`.
+
 ### Start using it
 
 Download and install it:
