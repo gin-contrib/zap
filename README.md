@@ -12,6 +12,28 @@ Require Go **1.26** or later.
 
 ## Usage
 
+### Status-based log levels
+
+Set `Config.StatusLevelMapper` to select a level from the final response status:
+
+```go
+ginzap.Config{StatusLevelMapper: func(status int) zapcore.Level {
+    switch {
+    case status >= 500:
+        return zapcore.ErrorLevel
+    case status >= 400:
+        return zapcore.WarnLevel
+    default:
+        return zapcore.InfoLevel
+    }
+}}
+```
+
+The mapper applies to requests with and without `c.Errors`, runs once per logged request, and is not
+called for skipped requests. A nil mapper preserves the existing `DefaultLevel`/error behavior.
+Loggers implementing `Log(zapcore.Level, string, ...zap.Field)` support exact levels; minimal
+`ZapLogger` implementations use `Info` below Error and `Error` otherwise for mapped requests.
+
 ### Start using it
 
 Download and install it:
