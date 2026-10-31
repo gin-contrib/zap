@@ -1,6 +1,6 @@
 # zap
 
-[![Run Tests](https://github.com/gin-contrib/zap/actions/workflows/go.yml/badge.svg)](https://github.com/gin-contrib/zap/actions/workflows/go.yml)
+[![Lint and Testing](https://github.com/gin-contrib/zap/actions/workflows/testing.yml/badge.svg)](https://github.com/gin-contrib/zap/actions/workflows/testing.yml)
 [![Trivy Security Scan](https://github.com/gin-contrib/zap/actions/workflows/trivy-scan.yml/badge.svg)](https://github.com/gin-contrib/zap/actions/workflows/trivy-scan.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/gin-contrib/zap.svg)](https://pkg.go.dev/github.com/gin-contrib/zap)
 
